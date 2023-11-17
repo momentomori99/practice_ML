@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
 from sklearn.model_selection import train_test_split
@@ -27,3 +28,17 @@ def data_path(dat_id):
 
 def save_fig(fig_id):
     plt.savefig(image_path(fig_id) + ".png", format='png')
+
+from pdfquery import PDFQuery
+
+file_path = "data.pdf"
+start_page = 8
+end_page = 9
+
+pdf = PDFQuery(file_path)
+pdf.load(8)
+
+text_elements = pdf.pq('LTTextLineHorizontal')
+text = [t.text for t in text_elements]
+
+print(text)

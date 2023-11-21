@@ -5,6 +5,8 @@ import sklearn.linear_model as skl
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import os
+from IPython.display import display
+
 
 PROJECT_ROOT_DIR = "Results"
 FIGURE_ID = "Results/FigureFiles"
@@ -67,12 +69,51 @@ clf = skl.LinearRegression().fit(X, Energies)
 fity = clf.predict(X)
 Masses['Eapprox'] = fity
 
-fig, ax = plt.subplots()
-ax.set_xlabel(r'$A = N + Z$')
-ax.set_ylabel(r'$E_\mathrm{bind}\, /\mathrm{MeV}$')
-ax.plot(Masses['A'], Masses['Ebinding'], alpha = 0.7, lw=2, label='Ame2016')
-ax.plot(Masses['A'], Masses['Eapprox'], alpha = 0.7, lw=2, c='m', label='fit')
+# fig, ax = plt.subplots()
+# ax.set_xlabel(r'$A = N + Z$')
+# ax.set_ylabel(r'$E_\mathrm{bind}\, /\mathrm{MeV}$')
+# ax.plot(Masses['A'], Masses['Ebinding'], alpha = 0.7, lw=2, label='Ame2016')
+# ax.plot(Masses['A'], Masses['Eapprox'], alpha = 0.7, lw=2, c='m', label='fit')
+#
+# ax.legend()
+# ax.grid(1)
+# plt.show()
 
-ax.legend()
-ax.grid(1)
-plt.show()
+DesignMatrix = pd.DataFrame(X)
+
+DesignMatrix.index = A
+DesignMatrix.columns = ['1', 'A', 'A**(2.0/3.0)', 'A**(-1.0/3.0)', 'A**(-1.0)']
+display(DesignMatrix)
+
+#Let's do it with linear algebra!
+beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(Energies)
+#Now make prediction:
+ytilde = X @ beta
+
+Masses['Eapprox2'] = ytilde
+# fig, ax = plt.subplots()
+#
+#
+# ax.set_xlabel(r'$A = N + Z$')
+# ax.set_ylabel(r'$E_\mathrm{bind}\,/\mathrm{MeV}$')
+# ax.plot(Masses['A'], Masses['Ebinding'], alpha=0.7, lw=2,
+#             label='Ame2016')
+# ax.plot(Masses['A'], Masses['Eapprox2'], alpha=0.7, lw=2, c='m',
+#             label='Fit_with_linalg')
+# ax.legend()
+# save_fig("Masses2016OLS")
+# plt.show()
+
+
+#We want to test how well we are doing, using therefore R2 test:
+def R2(y_data, y_model):
+    return 1 - np.sum((y_data - y_model)**2) / np.sum((y_data - np.mean(y_data))**2)
+print(f"R2 of linalg method: {R2(Energies, ytilde)}")
+print(f"R2 of scikit method: {R2(Energies, fity)}")
+
+def MSE(y_data, y_model):
+    n = np.size(y_model)
+    return np.sum((y_data - y_model)**2)/n
+
+print(f"MSE of linalg method: {MSE(Energies, ytilde)}")
+print(f"MSE of scikit method: {MSE(Energies, fity)}")
